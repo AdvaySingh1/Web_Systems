@@ -19,3 +19,8 @@ div.navigation button{
 body{
     background-color: lightsalmon;
 }
+#shirish_img{
+    position: absolute;
+    top: 500px;
+    right: 200px;
+}
