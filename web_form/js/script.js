@@ -28,11 +28,48 @@ for (i = 0; i < classes.length; i++){
 }
 //link.setAttribute('class', 'otherclass');
 link.setAttribute('id', 'thisID');
-console.log(link.getAttribute('class'), link.getAttribute('id'));
-console.log(link.classList.contains('more_shopping'));
+//console.log(link.getAttribute('class'), link.getAttribute('id'));
+//console.log(link.classList.contains('more_shopping'));
 
 button.remove();
 link.remove();
+
+
+// DOM treversal
+/*const tab = document.documentElement.parentNode;
+const body = document.querySelector('body');
+//console.log(body.parentElement);
+//console.log(body.childElementCount);
+//console.log(body.childNodes);
+console.log(body.firstChild, body.firstElementChild);
+console.log(body.lastChild, body.lastElementChild);
+const firstBodyElement = body.firstElementChild;
+console.log(firstBodyElement.previousSibling, firstBodyElement.nextElementSibling);*/
+//console.log(document.querySelector('button').namespaceURI);
+
+// const table = document.getElementsByTagNameNS('https://www.worldometers.info/geography/how-many-countries-are-there-in-the-world/#google_vignette', 'body')
+// console.log(nav.namespaceURI);
+
+const bar = () => 5;
+
+function foo (){
+    alert(bar());
+}
+
+function changeColor(color){
+    buttons_div.style.background =  color;
+}
+
+rand_b_2 = document.getElementById('rand_button_2');
+rand_b_2.addEventListener("click", foo);
+buttons_div = document.getElementById('rand_button');
+console.log(buttons_div);
+buttons_div.addEventListener("mouseover", changeColor('white'));
+buttons_div.addEventListener("onmouseout", changeColor('black'));
+
+
+
+
 
 
 

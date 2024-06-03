@@ -24,3 +24,26 @@ body{
     top: 500px;
     right: 200px;
 }
+
+#rand_button{
+    background-color: green; 
+    height: 100px;
+    width: 300px;
+}
+
+
+div#rand_button > button{
+    background-color: #d3d5c6; /* Green */
+    border: none;
+    color: rgba(24, 219, 95, 0.9);
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+
+#rand_button_3{
+    margin-right: 600px;
+}
+
