@@ -47,3 +47,11 @@ div#rand_button > button{
     margin-right: 600px;
 }
 
+.hidden-content{
+    display: none;
+}
+
+.reveal-button{
+    display: block;
+}
+

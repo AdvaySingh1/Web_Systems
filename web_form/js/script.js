@@ -55,7 +55,6 @@ const bar = () => 5;
 function foo (){
     alert(bar());
 }
-
 function changeColor(color){
     buttons_div.style.background =  color;
 }
@@ -63,9 +62,26 @@ function changeColor(color){
 rand_b_2 = document.getElementById('rand_button_2');
 rand_b_2.addEventListener("click", foo);
 buttons_div = document.getElementById('rand_button');
-console.log(buttons_div);
-buttons_div.addEventListener("mouseover", changeColor('white'));
-buttons_div.addEventListener("onmouseout", changeColor('black'));
+//console.log(buttons_div);
+buttons_div.addEventListener("mouseover", () => buttons_div.style.backgroundColor = 'white');
+buttons_div.addEventListener("mouseout", () => changeColor('black'));
+
+
+function changeCDisplay(content){
+    if (content.classList.contains('hidden-content')){
+        console.log('true');
+        content.classList.remove('hidden-content');
+    }
+    else{
+        content.classList.add('hidden-content');
+    }
+}
+
+hiddenC = document.querySelector('.hidden-content');
+revealB = document.querySelector('.reveal-btn');
+
+revealB.addEventListener("click", () => changeCDisplay(hiddenC));
+
 
 
 
