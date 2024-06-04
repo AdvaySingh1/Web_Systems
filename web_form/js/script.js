@@ -83,6 +83,48 @@ revealB = document.querySelector('.reveal-btn');
 revealB.addEventListener("click", () => changeCDisplay(hiddenC));
 
 
+// event propogation
+
+ div1 = document.querySelector('.div1');
+ div2 = document.querySelector('.div2');
+ capBtn = document.querySelector('.btn-event-capture');
+ bubBtn = document.querySelector('.btn-event-bubble');
+
+
+ window.addEventListener('click', function(e){if(e.target == capBtn){
+    console.log(window)}}, true);
+ div1.addEventListener('click', function(e){if(e.target == capBtn){
+    console.log('div1')}}, true);
+ div2.addEventListener('click',  function(e){if(e.target == capBtn){
+    console.log('div2')}}, {once: true});
+ capBtn.addEventListener('click', function(e) { console.log('capBtn')}, true);
+
+ div1.addEventListener('click', function(e){if(e.target == bubBtn){
+    console.log('div1')}}, false);
+ div2.addEventListener('click',  function(e){if(e.target == bubBtn){
+    console.log('div2');
+    e.stopPropagation()}}, false);
+ bubBtn.addEventListener('click', function(e) { console.log('BubBtn', e)}, false);
+
+ // event deledation
+ 
+
+
+ delUl = document.querySelector('.ed > ul');
+ delUl.addEventListener('mouseover', function(e){
+    //console.log(e.target);
+    if (e.target.tagName == 'BUTTON'){
+        e.target.style.backgroundColor = 'pink'
+    }},
+    true);
+
+delUl.addEventListener('mouseout', function(e){
+    e.target.style.backgroundColor = ''},
+    true);
+
+
+
+
 
 
 
