@@ -1,19 +1,41 @@
 <script lang="ts">
 	import Globe from './globe.svelte';
-	export let name: string;
+	import Model from './Model.svelte'
+	let firstName = '';
+	let lastName = '';
+	let fullName = '';
+	let color = '';
+
+
+	// event handlers
+	function changeColorBlue(e){
+		color = 'blue';
+	}
+	const changeColor = (e) =>{
+		color = e.target.value;
+	};
+
+	//reactive values
+	$: fullName = `${firstName} ${lastName}`;
+	// $: {
+	// 	console.log(color);
+	// };
+
 </script>
 
-<nav id="mynav">
-	<ul>
-	  <li><a href="#intro" class="active">Introduction</a></li>
-	  <li><a href="#first">About Me</a></li>
-	  <li><a href="#second">Projects</a></li>
-	  <li><a href="#cta">Interests</a></li>
-	</ul>
-  </nav>
+<Model />
+
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<h1 style="background-color:{color}">Hello {fullName}!</h1>
+	<p>This the color is {color}.</p>
+	<button on:click={changeColorBlue}>Change color</button>
+	<!---<input type="text" on:input={changeColor}>-->
+	<input title="color" type="text" bind:value={color}>
+	<label for="fn">First Name</label>
+	<input id="fn"title="First Name" type="text" bind:value={firstName}>
+	<label for="ln">Last Name</label>
+	<input id="ln"title="Last Name"type="text" bind:value={lastName}>
+
 </main>
 
 <Globe />
@@ -25,8 +47,9 @@
 		padding: 10em;
 		max-width: 240px;
 		margin: 0 auto;
-		background-color: #1f1321d6;
-		height: 1200px;
+		background-color: color;
+		height: 300px;
+
 	}
 
 	h1 {
@@ -34,61 +57,6 @@
 		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
-	}
-
-	#mynav {
-	/* We want absolute positioning because we want the nav bar to be relative to its ancestor, the "wrapper" id container */
-	position: absolute;
-	width: 1200em;
-	right: 15px;
-	
-	/* You can use calc in CSS to calculate numbers, just like a calculator */
-	max-width: calc(100% - 4em);
-	padding: 1em;
-	background-color: #f7f7f7;
-	
-	/* We want the top left and top right corner to be soft corners */
-	border-top-left-radius: 10em;
-	border-top-right-radius: 10em;
-	cursor:grabbing;
-	text-align: center;
-	}
-	#mynav a {
-	color: #636363;
-	}
-	#mynav a:hover {
-	color: #636363;
-	}
-	#mynav ul {
-	margin: 0;
-	padding: 0;
-	
-	/* No bullets in a list*/
-	list-style: none;
-	}
-	#mynav ul li {
-	display: inline-block;
-	margin: 0 0.35em;
-	padding: 0;
-	/* Center the text vertically */
-	vertical-align: middle;
-	}
-	#mynav ul li a {
-	display: inline-block;
-	height: 2.25em;
-	line-height: 2.25em;
-	padding: 0 1.25em;
-	border: 0;
-	border-radius: 8px;
-	box-shadow: inset 0 0 0 1px transparent;
-	text-decoration: none;
-	}
-	#mynav ul li a:hover {
-	background-color: rgba(222, 222, 222, 0.25);
-	}
-	#mynav ul li a:active {
-	background-color: #ffffff;
-	box-shadow: none;
 	}
 
 	@media (min-width: 640px) {
