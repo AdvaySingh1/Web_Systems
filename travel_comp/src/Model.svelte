@@ -10,7 +10,8 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="backdrop" on:click|self >
         <div class="model" class:promo={isPromo}>
-            <p>{promoMsg}</p>
+            <!-- <p>{promoMsg}</p> -->
+            <slot></slot>
         </div>
     </div>
 {/if}

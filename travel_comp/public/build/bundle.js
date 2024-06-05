@@ -79,6 +79,12 @@ var app = (function () {
         }
         return -1;
     }
+
+    const globals = (typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : global);
     function append(target, node) {
         target.appendChild(node);
     }
@@ -106,6 +112,13 @@ var app = (function () {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
     }
+    function prevent_default(fn) {
+        return function (event) {
+            event.preventDefault();
+            // @ts-ignore
+            return fn.call(this, event);
+        };
+    }
     function self(fn) {
         return function (event) {
             // @ts-ignore
@@ -118,6 +131,29 @@ var app = (function () {
             node.removeAttribute(attribute);
         else if (node.getAttribute(attribute) !== value)
             node.setAttribute(attribute, value);
+    }
+    function get_binding_group_value(group, __value, checked) {
+        const value = new Set();
+        for (let i = 0; i < group.length; i += 1) {
+            if (group[i].checked)
+                value.add(group[i].__value);
+        }
+        if (!checked) {
+            value.delete(__value);
+        }
+        return Array.from(value);
+    }
+    function init_binding_group(group) {
+        let _inputs;
+        return {
+            /* push */ p(...inputs) {
+                _inputs = inputs;
+                _inputs.forEach(input => group.push(input));
+            },
+            /* remove */ r() {
+                _inputs.forEach(input => group.splice(group.indexOf(input), 1));
+            }
+        };
     }
     function to_number(value) {
         return value === '' ? null : +value;
@@ -135,6 +171,22 @@ var app = (function () {
         else {
             node.style.setProperty(key, value, important ? 'important' : '');
         }
+    }
+    function select_option(select, value, mounting) {
+        for (let i = 0; i < select.options.length; i += 1) {
+            const option = select.options[i];
+            if (option.__value === value) {
+                option.selected = true;
+                return;
+            }
+        }
+        if (!mounting || value !== undefined) {
+            select.selectedIndex = -1; // no option should be selected
+        }
+    }
+    function select_value(select) {
+        const selected_option = select.querySelector(':checked');
+        return selected_option && selected_option.__value;
     }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
@@ -846,7 +898,7 @@ var app = (function () {
     }
 
     // (28:12) {#if number > 10}
-    function create_if_block$2(ctx) {
+    function create_if_block$1(ctx) {
     	let p;
 
     	const block = {
@@ -865,7 +917,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$2.name,
+    		id: create_if_block$1.name,
     		type: "if",
     		source: "(28:12) {#if number > 10}",
     		ctx
@@ -902,7 +954,7 @@ var app = (function () {
     	}
 
     	function select_block_type(ctx, dirty) {
-    		if (/*number*/ ctx[1] > 10) return create_if_block$2;
+    		if (/*number*/ ctx[1] > 10) return create_if_block$1;
     		if (/*number*/ ctx[1] > 5) return create_if_block_1;
     		return create_else_block;
     	}
@@ -1099,23 +1151,22 @@ var app = (function () {
     const file$2 = "src/Model.svelte";
 
     // (8:0) {#if showModel}
-    function create_if_block$1(ctx) {
+    function create_if_block(ctx) {
     	let div1;
     	let div0;
-    	let p;
-    	let t;
+    	let current;
     	let mounted;
     	let dispose;
+    	const default_slot_template = /*#slots*/ ctx[4].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
 
     	const block = {
     		c: function create() {
     			div1 = element("div");
     			div0 = element("div");
-    			p = element("p");
-    			t = text(/*promoMsg*/ ctx[1]);
-    			add_location(p, file$2, 11, 12, 307);
+    			if (default_slot) default_slot.c();
     			attr_dev(div0, "class", "model svelte-1wac0fu");
-    			toggle_class(div0, "promo", /*isPromo*/ ctx[2]);
+    			toggle_class(div0, "promo", /*isPromo*/ ctx[1]);
     			add_location(div0, file$2, 10, 8, 253);
     			attr_dev(div1, "class", "backdrop svelte-1wac0fu");
     			add_location(div1, file$2, 9, 4, 207);
@@ -1123,23 +1174,50 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, div1, anchor);
     			append_dev(div1, div0);
-    			append_dev(div0, p);
-    			append_dev(p, t);
+
+    			if (default_slot) {
+    				default_slot.m(div0, null);
+    			}
+
+    			current = true;
 
     			if (!mounted) {
-    				dispose = listen_dev(div1, "click", self(/*click_handler*/ ctx[3]), false, false, false, false);
+    				dispose = listen_dev(div1, "click", self(/*click_handler*/ ctx[5]), false, false, false, false);
     				mounted = true;
     			}
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*promoMsg*/ 2) set_data_dev(t, /*promoMsg*/ ctx[1]);
-
-    			if (dirty & /*isPromo*/ 4) {
-    				toggle_class(div0, "promo", /*isPromo*/ ctx[2]);
+    			if (default_slot) {
+    				if (default_slot.p && (!current || dirty & /*$$scope*/ 8)) {
+    					update_slot_base(
+    						default_slot,
+    						default_slot_template,
+    						ctx,
+    						/*$$scope*/ ctx[3],
+    						!current
+    						? get_all_dirty_from_scope(/*$$scope*/ ctx[3])
+    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[3], dirty, null),
+    						null
+    					);
+    				}
     			}
+
+    			if (!current || dirty & /*isPromo*/ 2) {
+    				toggle_class(div0, "promo", /*isPromo*/ ctx[1]);
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(default_slot, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(default_slot, local);
+    			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div1);
+    			if (default_slot) default_slot.d(detaching);
     			mounted = false;
     			dispose();
     		}
@@ -1147,7 +1225,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$1.name,
+    		id: create_if_block.name,
     		type: "if",
     		source: "(8:0) {#if showModel}",
     		ctx
@@ -1158,7 +1236,8 @@ var app = (function () {
 
     function create_fragment$2(ctx) {
     	let if_block_anchor;
-    	let if_block = /*showModel*/ ctx[0] && create_if_block$1(ctx);
+    	let current;
+    	let if_block = /*showModel*/ ctx[0] && create_if_block(ctx);
 
     	const block = {
     		c: function create() {
@@ -1171,23 +1250,41 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			if (if_block) if_block.m(target, anchor);
     			insert_dev(target, if_block_anchor, anchor);
+    			current = true;
     		},
     		p: function update(ctx, [dirty]) {
     			if (/*showModel*/ ctx[0]) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
+
+    					if (dirty & /*showModel*/ 1) {
+    						transition_in(if_block, 1);
+    					}
     				} else {
-    					if_block = create_if_block$1(ctx);
+    					if_block = create_if_block(ctx);
     					if_block.c();
+    					transition_in(if_block, 1);
     					if_block.m(if_block_anchor.parentNode, if_block_anchor);
     				}
     			} else if (if_block) {
-    				if_block.d(1);
-    				if_block = null;
+    				group_outros();
+
+    				transition_out(if_block, 1, 1, () => {
+    					if_block = null;
+    				});
+
+    				check_outros();
     			}
     		},
-    		i: noop,
-    		o: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(if_block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(if_block);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
     			if (if_block) if_block.d(detaching);
     			if (detaching) detach_dev(if_block_anchor);
@@ -1207,7 +1304,7 @@ var app = (function () {
 
     function instance$2($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('Model', slots, []);
+    	validate_slots('Model', slots, ['default']);
     	let { showModel = false } = $$props;
     	let { promoMsg = 'default msg' } = $$props;
     	let { isPromo = false } = $$props;
@@ -1223,29 +1320,30 @@ var app = (function () {
 
     	$$self.$$set = $$props => {
     		if ('showModel' in $$props) $$invalidate(0, showModel = $$props.showModel);
-    		if ('promoMsg' in $$props) $$invalidate(1, promoMsg = $$props.promoMsg);
-    		if ('isPromo' in $$props) $$invalidate(2, isPromo = $$props.isPromo);
+    		if ('promoMsg' in $$props) $$invalidate(2, promoMsg = $$props.promoMsg);
+    		if ('isPromo' in $$props) $$invalidate(1, isPromo = $$props.isPromo);
+    		if ('$$scope' in $$props) $$invalidate(3, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({ showModel, promoMsg, isPromo });
 
     	$$self.$inject_state = $$props => {
     		if ('showModel' in $$props) $$invalidate(0, showModel = $$props.showModel);
-    		if ('promoMsg' in $$props) $$invalidate(1, promoMsg = $$props.promoMsg);
-    		if ('isPromo' in $$props) $$invalidate(2, isPromo = $$props.isPromo);
+    		if ('promoMsg' in $$props) $$invalidate(2, promoMsg = $$props.promoMsg);
+    		if ('isPromo' in $$props) $$invalidate(1, isPromo = $$props.isPromo);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [showModel, promoMsg, isPromo, click_handler];
+    	return [showModel, isPromo, promoMsg, $$scope, slots, click_handler];
     }
 
     class Model extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { showModel: 0, promoMsg: 1, isPromo: 2 });
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { showModel: 0, promoMsg: 2, isPromo: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1282,172 +1380,162 @@ var app = (function () {
 
     /* src/Form.svelte generated by Svelte v3.59.2 */
 
+    const { console: console_1 } = globals;
     const file$1 = "src/Form.svelte";
-    const get_header_slot_changes = dirty => ({});
-    const get_header_slot_context = ctx => ({});
-
-    // (6:0) {#if showForm}
-    function create_if_block(ctx) {
-    	let div1;
-    	let div0;
-    	let t;
-    	let current;
-    	let mounted;
-    	let dispose;
-    	const header_slot_template = /*#slots*/ ctx[2].header;
-    	const header_slot = create_slot(header_slot_template, ctx, /*$$scope*/ ctx[1], get_header_slot_context);
-    	const default_slot_template = /*#slots*/ ctx[2].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[1], null);
-
-    	const block = {
-    		c: function create() {
-    			div1 = element("div");
-    			div0 = element("div");
-    			if (header_slot) header_slot.c();
-    			t = space();
-    			if (default_slot) default_slot.c();
-    			attr_dev(div0, "class", "mainMsg svelte-8wun5u");
-    			add_location(div0, file$1, 8, 8, 186);
-    			attr_dev(div1, "class", "backdrop svelte-8wun5u");
-    			add_location(div1, file$1, 7, 4, 140);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
-    			append_dev(div1, div0);
-
-    			if (header_slot) {
-    				header_slot.m(div0, null);
-    			}
-
-    			append_dev(div0, t);
-
-    			if (default_slot) {
-    				default_slot.m(div0, null);
-    			}
-
-    			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(div1, "click", self(/*click_handler*/ ctx[3]), false, false, false, false);
-    				mounted = true;
-    			}
-    		},
-    		p: function update(ctx, dirty) {
-    			if (header_slot) {
-    				if (header_slot.p && (!current || dirty & /*$$scope*/ 2)) {
-    					update_slot_base(
-    						header_slot,
-    						header_slot_template,
-    						ctx,
-    						/*$$scope*/ ctx[1],
-    						!current
-    						? get_all_dirty_from_scope(/*$$scope*/ ctx[1])
-    						: get_slot_changes(header_slot_template, /*$$scope*/ ctx[1], dirty, get_header_slot_changes),
-    						get_header_slot_context
-    					);
-    				}
-    			}
-
-    			if (default_slot) {
-    				if (default_slot.p && (!current || dirty & /*$$scope*/ 2)) {
-    					update_slot_base(
-    						default_slot,
-    						default_slot_template,
-    						ctx,
-    						/*$$scope*/ ctx[1],
-    						!current
-    						? get_all_dirty_from_scope(/*$$scope*/ ctx[1])
-    						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[1], dirty, null),
-    						null
-    					);
-    				}
-    			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(header_slot, local);
-    			transition_in(default_slot, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(header_slot, local);
-    			transition_out(default_slot, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
-    			if (header_slot) header_slot.d(detaching);
-    			if (default_slot) default_slot.d(detaching);
-    			mounted = false;
-    			dispose();
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_if_block.name,
-    		type: "if",
-    		source: "(6:0) {#if showForm}",
-    		ctx
-    	});
-
-    	return block;
-    }
 
     function create_fragment$1(ctx) {
-    	let if_block_anchor;
-    	let current;
-    	let if_block = /*showForm*/ ctx[0] && create_if_block(ctx);
+    	let form;
+    	let input0;
+    	let t0;
+    	let input1;
+    	let t1;
+    	let label0;
+    	let t3;
+    	let input2;
+    	let t4;
+    	let br;
+    	let t5;
+    	let label1;
+    	let t7;
+    	let select;
+    	let option0;
+    	let option1;
+    	let option2;
+    	let option3;
+    	let t12;
+    	let button;
+    	let binding_group;
+    	let mounted;
+    	let dispose;
+    	binding_group = init_binding_group(/*$$binding_groups*/ ctx[8][0]);
 
     	const block = {
     		c: function create() {
-    			if (if_block) if_block.c();
-    			if_block_anchor = empty();
+    			form = element("form");
+    			input0 = element("input");
+    			t0 = space();
+    			input1 = element("input");
+    			t1 = space();
+    			label0 = element("label");
+    			label0.textContent = "Skills";
+    			t3 = space();
+    			input2 = element("input");
+    			t4 = text("Being Cool");
+    			br = element("br");
+    			t5 = space();
+    			label1 = element("label");
+    			label1.textContent = "Belt Color";
+    			t7 = space();
+    			select = element("select");
+    			option0 = element("option");
+    			option0.textContent = "Orange";
+    			option1 = element("option");
+    			option1.textContent = "Brown";
+    			option2 = element("option");
+    			option2.textContent = "Black";
+    			option3 = element("option");
+    			option3.textContent = "White";
+    			t12 = space();
+    			button = element("button");
+    			button.textContent = "Add Ninja";
+    			attr_dev(input0, "type", "text");
+    			attr_dev(input0, "placeholder", "name");
+    			add_location(input0, file$1, 19, 8, 456);
+    			attr_dev(input1, "type", "number");
+    			attr_dev(input1, "placeholder", "age");
+    			add_location(input1, file$1, 20, 8, 521);
+    			attr_dev(label0, "for", "skills");
+    			add_location(label0, file$1, 21, 8, 586);
+    			attr_dev(input2, "type", "checkbox");
+    			input2.__value = "cool";
+    			input2.value = input2.__value;
+    			add_location(input2, file$1, 22, 8, 629);
+    			add_location(br, file$1, 22, 74, 695);
+    			attr_dev(label1, "for", "belts");
+    			add_location(label1, file$1, 23, 8, 708);
+    			option0.__value = "orange";
+    			option0.value = option0.__value;
+    			add_location(option0, file$1, 25, 12, 798);
+    			option1.__value = "brown";
+    			option1.value = option1.__value;
+    			add_location(option1, file$1, 26, 12, 849);
+    			option2.__value = "black";
+    			option2.value = option2.__value;
+    			add_location(option2, file$1, 27, 12, 898);
+    			option3.__value = "white";
+    			option3.value = option3.__value;
+    			add_location(option3, file$1, 28, 12, 947);
+    			if (/*beltColor*/ ctx[1] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[9].call(select));
+    			add_location(select, file$1, 24, 8, 754);
+    			add_location(button, file$1, 30, 8, 1010);
+    			add_location(form, file$1, 18, 4, 401);
+    			binding_group.p(input2);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			if (if_block) if_block.m(target, anchor);
-    			insert_dev(target, if_block_anchor, anchor);
-    			current = true;
-    		},
-    		p: function update(ctx, [dirty]) {
-    			if (/*showForm*/ ctx[0]) {
-    				if (if_block) {
-    					if_block.p(ctx, dirty);
+    			insert_dev(target, form, anchor);
+    			append_dev(form, input0);
+    			set_input_value(input0, /*name*/ ctx[0]);
+    			append_dev(form, t0);
+    			append_dev(form, input1);
+    			set_input_value(input1, /*age*/ ctx[2]);
+    			append_dev(form, t1);
+    			append_dev(form, label0);
+    			append_dev(form, t3);
+    			append_dev(form, input2);
+    			input2.checked = ~(/*skills*/ ctx[3] || []).indexOf(input2.__value);
+    			append_dev(form, t4);
+    			append_dev(form, br);
+    			append_dev(form, t5);
+    			append_dev(form, label1);
+    			append_dev(form, t7);
+    			append_dev(form, select);
+    			append_dev(select, option0);
+    			append_dev(select, option1);
+    			append_dev(select, option2);
+    			append_dev(select, option3);
+    			select_option(select, /*beltColor*/ ctx[1], true);
+    			append_dev(form, t12);
+    			append_dev(form, button);
 
-    					if (dirty & /*showForm*/ 1) {
-    						transition_in(if_block, 1);
-    					}
-    				} else {
-    					if_block = create_if_block(ctx);
-    					if_block.c();
-    					transition_in(if_block, 1);
-    					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-    				}
-    			} else if (if_block) {
-    				group_outros();
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[5]),
+    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[6]),
+    					listen_dev(input2, "change", /*input2_change_handler*/ ctx[7]),
+    					listen_dev(select, "change", /*select_change_handler*/ ctx[9]),
+    					listen_dev(form, "submit", prevent_default(/*handleSubmit*/ ctx[4]), false, true, false, false)
+    				];
 
-    				transition_out(if_block, 1, 1, () => {
-    					if_block = null;
-    				});
-
-    				check_outros();
+    				mounted = true;
     			}
     		},
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(if_block);
-    			current = true;
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*name*/ 1 && input0.value !== /*name*/ ctx[0]) {
+    				set_input_value(input0, /*name*/ ctx[0]);
+    			}
+
+    			if (dirty & /*age*/ 4 && to_number(input1.value) !== /*age*/ ctx[2]) {
+    				set_input_value(input1, /*age*/ ctx[2]);
+    			}
+
+    			if (dirty & /*skills*/ 8) {
+    				input2.checked = ~(/*skills*/ ctx[3] || []).indexOf(input2.__value);
+    			}
+
+    			if (dirty & /*beltColor*/ 2) {
+    				select_option(select, /*beltColor*/ ctx[1]);
+    			}
     		},
-    		o: function outro(local) {
-    			transition_out(if_block);
-    			current = false;
-    		},
+    		i: noop,
+    		o: noop,
     		d: function destroy(detaching) {
-    			if (if_block) if_block.d(detaching);
-    			if (detaching) detach_dev(if_block_anchor);
+    			if (detaching) detach_dev(form);
+    			binding_group.r();
+    			mounted = false;
+    			run_all(dispose);
     		}
     	};
 
@@ -1464,40 +1552,81 @@ var app = (function () {
 
     function instance$1($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('Form', slots, ['header','default']);
-    	let { showForm = false } = $$props;
-    	const writable_props = ['showForm'];
+    	validate_slots('Form', slots, []);
+    	let name;
+    	let beltColor;
+    	let age;
+    	let skills = [];
 
-    	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Form> was created with unknown prop '${key}'`);
-    	});
-
-    	function click_handler(event) {
-    		bubble.call(this, $$self, event);
-    	}
-
-    	$$self.$$set = $$props => {
-    		if ('showForm' in $$props) $$invalidate(0, showForm = $$props.showForm);
-    		if ('$$scope' in $$props) $$invalidate(1, $$scope = $$props.$$scope);
+    	const handleSubmit = () => {
+    		console.log(name, beltColor, age);
     	};
 
-    	$$self.$capture_state = () => ({ showForm });
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1.warn(`<Form> was created with unknown prop '${key}'`);
+    	});
+
+    	const $$binding_groups = [[]];
+
+    	function input0_input_handler() {
+    		name = this.value;
+    		$$invalidate(0, name);
+    	}
+
+    	function input1_input_handler() {
+    		age = to_number(this.value);
+    		$$invalidate(2, age);
+    	}
+
+    	function input2_change_handler() {
+    		skills = get_binding_group_value($$binding_groups[0], this.__value, this.checked);
+    		$$invalidate(3, skills);
+    	}
+
+    	function select_change_handler() {
+    		beltColor = select_value(this);
+    		$$invalidate(1, beltColor);
+    	}
+
+    	$$self.$capture_state = () => ({
+    		name,
+    		beltColor,
+    		age,
+    		skills,
+    		handleSubmit
+    	});
 
     	$$self.$inject_state = $$props => {
-    		if ('showForm' in $$props) $$invalidate(0, showForm = $$props.showForm);
+    		if ('name' in $$props) $$invalidate(0, name = $$props.name);
+    		if ('beltColor' in $$props) $$invalidate(1, beltColor = $$props.beltColor);
+    		if ('age' in $$props) $$invalidate(2, age = $$props.age);
+    		if ('skills' in $$props) $$invalidate(3, skills = $$props.skills);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [showForm, $$scope, slots, click_handler];
+    	return [
+    		name,
+    		beltColor,
+    		age,
+    		skills,
+    		handleSubmit,
+    		input0_input_handler,
+    		input1_input_handler,
+    		input2_change_handler,
+    		$$binding_groups,
+    		select_change_handler
+    	];
     }
 
     class Form extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { showForm: 0 });
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1506,58 +1635,36 @@ var app = (function () {
     			id: create_fragment$1.name
     		});
     	}
-
-    	get showForm() {
-    		throw new Error("<Form>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set showForm(value) {
-    		throw new Error("<Form>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
     }
 
     /* src/App.svelte generated by Svelte v3.59.2 */
     const file = "src/App.svelte";
 
-    // (32:0) <Form {showForm} on:click={() => showForm = !showForm}>
+    // (31:0) <Model {showModel} on:click={togglePromo}>
     function create_default_slot(ctx) {
     	let form;
-    	let input0;
-    	let t0;
-    	let input1;
-    	let t1;
-    	let input2;
+    	let current;
+    	form = new Form({ $$inline: true });
 
     	const block = {
     		c: function create() {
-    			form = element("form");
-    			input0 = element("input");
-    			t0 = space();
-    			input1 = element("input");
-    			t1 = space();
-    			input2 = element("input");
-    			attr_dev(input0, "type", "text");
-    			attr_dev(input0, "placeholder", "name");
-    			add_location(input0, file, 33, 2, 726);
-    			attr_dev(input1, "type", "text");
-    			attr_dev(input1, "placeholder", "belt");
-    			add_location(input1, file, 34, 2, 767);
-    			attr_dev(input2, "type", "number");
-    			attr_dev(input2, "placeholder", "age");
-    			add_location(input2, file, 35, 2, 808);
-    			add_location(form, file, 32, 1, 717);
+    			create_component(form.$$.fragment);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, form, anchor);
-    			append_dev(form, input0);
-    			append_dev(form, t0);
-    			append_dev(form, input1);
-    			append_dev(form, t1);
-    			append_dev(form, input2);
+    			mount_component(form, target, anchor);
+    			current = true;
     		},
-    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(form.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(form.$$.fragment, local);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(form);
+    			destroy_component(form, detaching);
     		}
     	};
 
@@ -1565,42 +1672,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(32:0) <Form {showForm} on:click={() => showForm = !showForm}>",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (38:1) 
-    function create_header_slot(ctx) {
-    	let div;
-    	let h2;
-
-    	const block = {
-    		c: function create() {
-    			div = element("div");
-    			h2 = element("h2");
-    			h2.textContent = "Add people";
-    			add_location(h2, file, 38, 2, 880);
-    			attr_dev(div, "slot", "header");
-    			add_location(div, file, 37, 1, 858);
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, h2);
-    		},
-    		p: noop,
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_header_slot.name,
-    		type: "slot",
-    		source: "(38:1) ",
+    		source: "(31:0) <Model {showModel} on:click={togglePromo}>",
     		ctx
     	});
 
@@ -1610,36 +1682,32 @@ var app = (function () {
     function create_fragment(ctx) {
     	let model;
     	let t0;
-    	let form;
-    	let t1;
     	let main;
     	let h1;
+    	let t1;
     	let t2;
     	let t3;
     	let t4;
-    	let t5;
     	let p;
+    	let t5;
     	let t6;
     	let t7;
     	let t8;
-    	let t9;
     	let button0;
-    	let t11;
+    	let t10;
     	let input0;
-    	let t12;
+    	let t11;
     	let label0;
-    	let t14;
+    	let t13;
     	let input1;
-    	let t15;
+    	let t14;
     	let label1;
-    	let t17;
+    	let t16;
     	let input2;
-    	let t18;
+    	let t17;
     	let div;
     	let button1;
-    	let t20;
-    	let button2;
-    	let t22;
+    	let t19;
     	let globe;
     	let current;
     	let mounted;
@@ -1647,96 +1715,76 @@ var app = (function () {
 
     	model = new Model({
     			props: {
-    				promoMsg: "OOO look who it is",
-    				isPromo: true,
-    				showModel: /*showModel*/ ctx[4]
-    			},
-    			$$inline: true
-    		});
-
-    	model.$on("click", /*togglePromo*/ ctx[6]);
-
-    	form = new Form({
-    			props: {
-    				showForm: /*showForm*/ ctx[5],
-    				$$slots: {
-    					header: [create_header_slot],
-    					default: [create_default_slot]
-    				},
+    				showModel: /*showModel*/ ctx[4],
+    				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
     			},
     			$$inline: true
     		});
 
-    	form.$on("click", /*click_handler*/ ctx[8]);
+    	model.$on("click", /*togglePromo*/ ctx[5]);
     	globe = new Globe({ $$inline: true });
 
     	const block = {
     		c: function create() {
     			create_component(model.$$.fragment);
     			t0 = space();
-    			create_component(form.$$.fragment);
-    			t1 = space();
     			main = element("main");
     			h1 = element("h1");
-    			t2 = text("Hello ");
-    			t3 = text(/*fullName*/ ctx[2]);
-    			t4 = text("!");
-    			t5 = space();
+    			t1 = text("Hello ");
+    			t2 = text(/*fullName*/ ctx[2]);
+    			t3 = text("!");
+    			t4 = space();
     			p = element("p");
-    			t6 = text("This the color is ");
-    			t7 = text(/*color*/ ctx[3]);
-    			t8 = text(".");
-    			t9 = space();
+    			t5 = text("This the color is ");
+    			t6 = text(/*color*/ ctx[3]);
+    			t7 = text(".");
+    			t8 = space();
     			button0 = element("button");
     			button0.textContent = "Change color";
-    			t11 = space();
+    			t10 = space();
     			input0 = element("input");
-    			t12 = space();
+    			t11 = space();
     			label0 = element("label");
     			label0.textContent = "First Name";
-    			t14 = space();
+    			t13 = space();
     			input1 = element("input");
-    			t15 = space();
+    			t14 = space();
     			label1 = element("label");
     			label1.textContent = "Last Name";
-    			t17 = space();
+    			t16 = space();
     			input2 = element("input");
-    			t18 = space();
+    			t17 = space();
     			div = element("div");
     			button1 = element("button");
     			button1.textContent = "Show Promo";
-    			t20 = space();
-    			button2 = element("button");
-    			button2.textContent = "Show Form";
-    			t22 = space();
+    			t19 = space();
     			create_component(globe.$$.fragment);
     			set_style(h1, "background-color", /*color*/ ctx[3]);
     			attr_dev(h1, "class", "svelte-1qxaw98");
-    			add_location(h1, file, 44, 1, 926);
-    			add_location(p, file, 45, 1, 987);
-    			add_location(button0, file, 46, 1, 1022);
+    			add_location(h1, file, 46, 1, 950);
+    			add_location(p, file, 47, 1, 1011);
+    			add_location(button0, file, 48, 1, 1046);
     			attr_dev(input0, "title", "color");
     			attr_dev(input0, "type", "text");
-    			add_location(input0, file, 48, 1, 1132);
+    			add_location(input0, file, 50, 1, 1156);
     			attr_dev(label0, "for", "fn");
-    			add_location(label0, file, 49, 1, 1186);
+    			add_location(label0, file, 51, 1, 1210);
     			attr_dev(input1, "id", "fn");
     			attr_dev(input1, "title", "First Name");
     			attr_dev(input1, "type", "text");
-    			add_location(input1, file, 50, 1, 1222);
+    			add_location(input1, file, 52, 1, 1246);
     			attr_dev(label1, "for", "ln");
-    			add_location(label1, file, 51, 1, 1292);
+    			add_location(label1, file, 53, 1, 1316);
     			attr_dev(input2, "id", "ln");
     			attr_dev(input2, "title", "Last Name");
     			attr_dev(input2, "type", "text");
-    			add_location(input2, file, 52, 1, 1327);
-    			add_location(button1, file, 54, 2, 1420);
-    			add_location(button2, file, 55, 2, 1478);
+    			add_location(input2, file, 54, 1, 1351);
+    			add_location(button1, file, 56, 2, 1444);
     			attr_dev(div, "class", "model_btn");
-    			add_location(div, file, 53, 1, 1394);
+    			add_location(div, file, 55, 1, 1418);
     			attr_dev(main, "class", "svelte-1qxaw98");
-    			add_location(main, file, 43, 0, 918);
+    			add_location(main, file, 45, 0, 942);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1744,50 +1792,45 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			mount_component(model, target, anchor);
     			insert_dev(target, t0, anchor);
-    			mount_component(form, target, anchor);
-    			insert_dev(target, t1, anchor);
     			insert_dev(target, main, anchor);
     			append_dev(main, h1);
+    			append_dev(h1, t1);
     			append_dev(h1, t2);
     			append_dev(h1, t3);
-    			append_dev(h1, t4);
-    			append_dev(main, t5);
+    			append_dev(main, t4);
     			append_dev(main, p);
+    			append_dev(p, t5);
     			append_dev(p, t6);
     			append_dev(p, t7);
-    			append_dev(p, t8);
-    			append_dev(main, t9);
+    			append_dev(main, t8);
     			append_dev(main, button0);
-    			append_dev(main, t11);
+    			append_dev(main, t10);
     			append_dev(main, input0);
     			set_input_value(input0, /*color*/ ctx[3]);
-    			append_dev(main, t12);
+    			append_dev(main, t11);
     			append_dev(main, label0);
-    			append_dev(main, t14);
+    			append_dev(main, t13);
     			append_dev(main, input1);
     			set_input_value(input1, /*firstName*/ ctx[0]);
-    			append_dev(main, t15);
+    			append_dev(main, t14);
     			append_dev(main, label1);
-    			append_dev(main, t17);
+    			append_dev(main, t16);
     			append_dev(main, input2);
     			set_input_value(input2, /*lastName*/ ctx[1]);
-    			append_dev(main, t18);
+    			append_dev(main, t17);
     			append_dev(main, div);
     			append_dev(div, button1);
-    			append_dev(div, t20);
-    			append_dev(div, button2);
-    			insert_dev(target, t22, anchor);
+    			insert_dev(target, t19, anchor);
     			mount_component(globe, target, anchor);
     			current = true;
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(button0, "click", /*changeColorBlue*/ ctx[7], false, false, false, false),
-    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[9]),
-    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[10]),
-    					listen_dev(input2, "input", /*input2_input_handler*/ ctx[11]),
-    					listen_dev(button1, "click", /*togglePromo*/ ctx[6], { once: true }, false, false, false),
-    					listen_dev(button2, "click", /*click_handler_1*/ ctx[12], false, false, false, false)
+    					listen_dev(button0, "click", /*changeColorBlue*/ ctx[6], false, false, false, false),
+    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[7]),
+    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[8]),
+    					listen_dev(input2, "input", /*input2_input_handler*/ ctx[9]),
+    					listen_dev(button1, "click", /*togglePromo*/ ctx[5], { once: true }, false, false, false)
     				];
 
     				mounted = true;
@@ -1796,22 +1839,19 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			const model_changes = {};
     			if (dirty & /*showModel*/ 16) model_changes.showModel = /*showModel*/ ctx[4];
-    			model.$set(model_changes);
-    			const form_changes = {};
-    			if (dirty & /*showForm*/ 32) form_changes.showForm = /*showForm*/ ctx[5];
 
-    			if (dirty & /*$$scope*/ 16384) {
-    				form_changes.$$scope = { dirty, ctx };
+    			if (dirty & /*$$scope*/ 2048) {
+    				model_changes.$$scope = { dirty, ctx };
     			}
 
-    			form.$set(form_changes);
-    			if (!current || dirty & /*fullName*/ 4) set_data_dev(t3, /*fullName*/ ctx[2]);
+    			model.$set(model_changes);
+    			if (!current || dirty & /*fullName*/ 4) set_data_dev(t2, /*fullName*/ ctx[2]);
 
     			if (!current || dirty & /*color*/ 8) {
     				set_style(h1, "background-color", /*color*/ ctx[3]);
     			}
 
-    			if (!current || dirty & /*color*/ 8) set_data_dev(t7, /*color*/ ctx[3]);
+    			if (!current || dirty & /*color*/ 8) set_data_dev(t6, /*color*/ ctx[3]);
 
     			if (dirty & /*color*/ 8 && input0.value !== /*color*/ ctx[3]) {
     				set_input_value(input0, /*color*/ ctx[3]);
@@ -1828,23 +1868,19 @@ var app = (function () {
     		i: function intro(local) {
     			if (current) return;
     			transition_in(model.$$.fragment, local);
-    			transition_in(form.$$.fragment, local);
     			transition_in(globe.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(model.$$.fragment, local);
-    			transition_out(form.$$.fragment, local);
     			transition_out(globe.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			destroy_component(model, detaching);
     			if (detaching) detach_dev(t0);
-    			destroy_component(form, detaching);
-    			if (detaching) detach_dev(t1);
     			if (detaching) detach_dev(main);
-    			if (detaching) detach_dev(t22);
+    			if (detaching) detach_dev(t19);
     			destroy_component(globe, detaching);
     			mounted = false;
     			run_all(dispose);
@@ -1870,8 +1906,8 @@ var app = (function () {
     	let fullName = '';
     	let color = '';
     	let showModel = false;
-    	let showForm = false;
 
+    	//let showForm = false;
     	//event forwarding
     	const togglePromo = () => {
     		$$invalidate(4, showModel = !showModel);
@@ -1893,8 +1929,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	const click_handler = () => $$invalidate(5, showForm = !showForm);
-
     	function input0_input_handler() {
     		color = this.value;
     		$$invalidate(3, color);
@@ -1910,8 +1944,6 @@ var app = (function () {
     		$$invalidate(1, lastName);
     	}
 
-    	const click_handler_1 = () => $$invalidate(5, showForm = !showForm);
-
     	$$self.$capture_state = () => ({
     		Globe,
     		Model,
@@ -1921,7 +1953,6 @@ var app = (function () {
     		fullName,
     		color,
     		showModel,
-    		showForm,
     		togglePromo,
     		changeColorBlue,
     		changeColor
@@ -1933,7 +1964,6 @@ var app = (function () {
     		if ('fullName' in $$props) $$invalidate(2, fullName = $$props.fullName);
     		if ('color' in $$props) $$invalidate(3, color = $$props.color);
     		if ('showModel' in $$props) $$invalidate(4, showModel = $$props.showModel);
-    		if ('showForm' in $$props) $$invalidate(5, showForm = $$props.showForm);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1953,14 +1983,11 @@ var app = (function () {
     		fullName,
     		color,
     		showModel,
-    		showForm,
     		togglePromo,
     		changeColorBlue,
-    		click_handler,
     		input0_input_handler,
     		input1_input_handler,
-    		input2_input_handler,
-    		click_handler_1
+    		input2_input_handler
     	];
     }
 

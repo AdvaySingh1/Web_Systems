@@ -7,7 +7,7 @@
 	let fullName = '';
 	let color = '';
 	let showModel = false;
-	let showForm = false;
+	//let showForm = false;
 
 	//event forwarding
 	const togglePromo = () =>{
@@ -34,10 +34,12 @@
 </script>
 
 
-<Model promoMsg="OOO look who it is" isPromo={true} {showModel} on:click={togglePromo}/>
+<!---<Model promoMsg="OOO look who it is" isPromo={true} {showModel} on:click={togglePromo}/>-->
+<Model {showModel} on:click={togglePromo}> 
+	<Form/>
+</Model>
 
-<Form {showForm} on:click={() => showForm = !showForm}>
-	<form>
+	<!---<form>
 		<input type="text" placeholder="name">
 		<input type="text" placeholder="belt">
 		<input type="number" placeholder="age">
@@ -45,7 +47,7 @@
 	<div slot="header">
 		<h2>Add people</h2>
 	</div>
-</Form>
+</Form>-->
 
 
 <main>
@@ -60,7 +62,7 @@
 	<input id="ln"title="Last Name"type="text" bind:value={lastName}>
 	<div class="model_btn">
 		<button on:click|once={togglePromo}>Show Promo</button>
-		<button on:click={() => showForm = !showForm}>Show Form</button>
+		<!-- <button on:click={() => showForm = !showForm}>Show Form</button> -->
 	</div>
 
 
