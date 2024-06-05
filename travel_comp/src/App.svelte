@@ -7,6 +7,7 @@
 	let fullName = '';
 	let color = '';
 	let showModel = false;
+	let people = [];
 	//let showForm = false;
 
 	//event forwarding
@@ -31,12 +32,18 @@
 	// 	console.log(color);
 	// };
 
+	const addPerson = (e) =>{
+		const person = e.detail;
+		people = [person, ...people];
+		showModel = !showModel;
+	}
+
 </script>
 
 
 <!---<Model promoMsg="OOO look who it is" isPromo={true} {showModel} on:click={togglePromo}/>-->
 <Model {showModel} on:click={togglePromo}> 
-	<Form/>
+	<Form on:addPerson={addPerson}/>
 </Model>
 
 	<!---<form>
@@ -57,18 +64,18 @@
 	<!---<input type="text" on:input={changeColor}>-->
 	<input title="color" type="text" bind:value={color}>
 	<label for="fn">First Name</label>
-	<input id="fn"title="First Name" type="text" bind:value={firstName}>
+	<input id="fn"title="First Name" type="text" placeholder="first name" bind:value={firstName}>
 	<label for="ln">Last Name</label>
-	<input id="ln"title="Last Name"type="text" bind:value={lastName}>
+	<input id="ln"title="Last Name"type="text" placeholder="last name" bind:value={lastName}>
 	<div class="model_btn">
-		<button on:click|once={togglePromo}>Show Promo</button>
+		<button on:click={togglePromo}>Show Promo</button>
 		<!-- <button on:click={() => showForm = !showForm}>Show Form</button> -->
 	</div>
 
 
 </main>
 
-<Globe />
+<Globe {people}/>
 
 
 <style>

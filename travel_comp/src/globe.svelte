@@ -1,8 +1,8 @@
 <script lang="ts">
-	let people = [
-    { name: 'yoshi', beltColour: 'black', age: 25, id: 1 },
-    { name: 'mario', beltColour: 'orange', age: 45, id: 2 },
-    { name: 'luigi', beltColour: 'brown', age: 35, id: 3 }
+	export let people = [
+    { name: 'yoshi', beltColor: 'black', age: 25, id: 1 },
+    { name: 'mario', beltColor: 'orange', age: 45, id: 2 },
+    { name: 'luigi', beltColor: 'brown', age: 35, id: 3 }
   ];
 
     let number;
@@ -15,9 +15,9 @@
 <main>
     {#each people as person (person.id)}
         <div>
-            <p>{person.name}'s faveriote beltColor is {person.beltColour} and age is {person.age}</p>
+            <p>{person.name}'s faveriote beltColor is {person.beltColor} and age is {person.age}</p>
             <button class="deleter" on:click={(e) => handlePClick(e, person.id)}>delete</button>
-            {#if person.beltColour == "black"}
+            {#if person.beltColor == "black"}
                 <p><strong>Black Belt.</strong></p>
             {/if}
         </div>

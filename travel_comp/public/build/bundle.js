@@ -79,12 +79,6 @@ var app = (function () {
         }
         return -1;
     }
-
-    const globals = (typeof window !== 'undefined'
-        ? window
-        : typeof globalThis !== 'undefined'
-            ? globalThis
-            : global);
     function append(target, node) {
         target.appendChild(node);
     }
@@ -200,6 +194,39 @@ var app = (function () {
     let current_component;
     function set_current_component(component) {
         current_component = component;
+    }
+    function get_current_component() {
+        if (!current_component)
+            throw new Error('Function called outside component initialization');
+        return current_component;
+    }
+    /**
+     * Creates an event dispatcher that can be used to dispatch [component events](/docs#template-syntax-component-directives-on-eventname).
+     * Event dispatchers are functions that can take two arguments: `name` and `detail`.
+     *
+     * Component events created with `createEventDispatcher` create a
+     * [CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent).
+     * These events do not [bubble](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture).
+     * The `detail` argument corresponds to the [CustomEvent.detail](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail)
+     * property and can contain any type of data.
+     *
+     * https://svelte.dev/docs#run-time-svelte-createeventdispatcher
+     */
+    function createEventDispatcher() {
+        const component = get_current_component();
+        return (type, detail, { cancelable = false } = {}) => {
+            const callbacks = component.$$.callbacks[type];
+            if (callbacks) {
+                // TODO are there situations where events could be dispatched
+                // in a server (non-DOM) environment?
+                const event = custom_event(type, detail, { cancelable });
+                callbacks.slice().forEach(fn => {
+                    fn.call(component, event);
+                });
+                return !event.defaultPrevented;
+            }
+            return true;
+        };
     }
     // TODO figure out if we still want to support
     // shorthand events, or if we want to implement
@@ -684,7 +711,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "There's no people.";
-    			add_location(p, file$3, 21, 12, 752);
+    			add_location(p, file$3, 21, 12, 754);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -706,7 +733,7 @@ var app = (function () {
     	return block;
     }
 
-    // (17:12) {#if person.beltColour == "black"}
+    // (17:12) {#if person.beltColor == "black"}
     function create_if_block_2(ctx) {
     	let p;
     	let strong;
@@ -716,8 +743,8 @@ var app = (function () {
     			p = element("p");
     			strong = element("strong");
     			strong.textContent = "Black Belt.";
-    			add_location(strong, file$3, 17, 19, 658);
-    			add_location(p, file$3, 17, 16, 655);
+    			add_location(strong, file$3, 17, 19, 660);
+    			add_location(p, file$3, 17, 16, 657);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -732,7 +759,7 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(17:12) {#if person.beltColour == \\\"black\\\"}",
+    		source: "(17:12) {#if person.beltColor == \\\"black\\\"}",
     		ctx
     	});
 
@@ -746,7 +773,7 @@ var app = (function () {
     	let t0_value = /*person*/ ctx[5].name + "";
     	let t0;
     	let t1;
-    	let t2_value = /*person*/ ctx[5].beltColour + "";
+    	let t2_value = /*person*/ ctx[5].beltColor + "";
     	let t2;
     	let t3;
     	let t4_value = /*person*/ ctx[5].age + "";
@@ -761,7 +788,7 @@ var app = (function () {
     		return /*click_handler*/ ctx[3](/*person*/ ctx[5], ...args);
     	}
 
-    	let if_block = /*person*/ ctx[5].beltColour == "black" && create_if_block_2(ctx);
+    	let if_block = /*person*/ ctx[5].beltColor == "black" && create_if_block_2(ctx);
 
     	const block = {
     		key: key_1,
@@ -779,10 +806,10 @@ var app = (function () {
     			button.textContent = "delete";
     			t7 = space();
     			if (if_block) if_block.c();
-    			add_location(p, file$3, 14, 12, 405);
+    			add_location(p, file$3, 14, 12, 409);
     			attr_dev(button, "class", "deleter");
-    			add_location(button, file$3, 15, 12, 507);
-    			add_location(div, file$3, 13, 8, 387);
+    			add_location(button, file$3, 15, 12, 510);
+    			add_location(div, file$3, 13, 8, 391);
     			this.first = div;
     		},
     		m: function mount(target, anchor) {
@@ -806,10 +833,10 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			if (dirty & /*people*/ 1 && t0_value !== (t0_value = /*person*/ ctx[5].name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*people*/ 1 && t2_value !== (t2_value = /*person*/ ctx[5].beltColour + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*people*/ 1 && t2_value !== (t2_value = /*person*/ ctx[5].beltColor + "")) set_data_dev(t2, t2_value);
     			if (dirty & /*people*/ 1 && t4_value !== (t4_value = /*person*/ ctx[5].age + "")) set_data_dev(t4, t4_value);
 
-    			if (/*person*/ ctx[5].beltColour == "black") {
+    			if (/*person*/ ctx[5].beltColor == "black") {
     				if (if_block) ; else {
     					if_block = create_if_block_2(ctx);
     					if_block.c();
@@ -847,7 +874,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Little number!";
-    			add_location(p, file$3, 32, 16, 1061);
+    			add_location(p, file$3, 32, 16, 1063);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -876,7 +903,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Number between 5 and 10";
-    			add_location(p, file$3, 30, 16, 994);
+    			add_location(p, file$3, 30, 16, 996);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -905,7 +932,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "Number greater than 10";
-    			add_location(p, file$3, 28, 16, 914);
+    			add_location(p, file$3, 28, 16, 916);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -981,10 +1008,10 @@ var app = (function () {
     			if_block.c();
     			attr_dev(input, "type", "number");
     			attr_dev(input, "title", "Number");
-    			add_location(input, file$3, 26, 8, 810);
-    			add_location(div, file$3, 23, 4, 794);
+    			add_location(input, file$3, 26, 8, 812);
+    			add_location(div, file$3, 23, 4, 796);
     			attr_dev(main, "class", "svelte-cnaowv");
-    			add_location(main, file$3, 11, 0, 331);
+    			add_location(main, file$3, 11, 0, 335);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1078,26 +1105,26 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Globe', slots, []);
 
-    	let people = [
+    	let { people = [
     		{
     			name: 'yoshi',
-    			beltColour: 'black',
+    			beltColor: 'black',
     			age: 25,
     			id: 1
     		},
     		{
     			name: 'mario',
-    			beltColour: 'orange',
+    			beltColor: 'orange',
     			age: 45,
     			id: 2
     		},
     		{
     			name: 'luigi',
-    			beltColour: 'brown',
+    			beltColor: 'brown',
     			age: 35,
     			id: 3
     		}
-    	];
+    	] } = $$props;
 
     	let number;
 
@@ -1105,7 +1132,7 @@ var app = (function () {
     		$$invalidate(0, people = people.filter(person => person.id != id));
     	};
 
-    	const writable_props = [];
+    	const writable_props = ['people'];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Globe> was created with unknown prop '${key}'`);
@@ -1117,6 +1144,10 @@ var app = (function () {
     		number = to_number(this.value);
     		$$invalidate(1, number);
     	}
+
+    	$$self.$$set = $$props => {
+    		if ('people' in $$props) $$invalidate(0, people = $$props.people);
+    	};
 
     	$$self.$capture_state = () => ({ people, number, handlePClick });
 
@@ -1135,7 +1166,7 @@ var app = (function () {
     class Globe extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, { people: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1143,6 +1174,14 @@ var app = (function () {
     			options,
     			id: create_fragment$3.name
     		});
+    	}
+
+    	get people() {
+    		throw new Error("<Globe>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set people(value) {
+    		throw new Error("<Globe>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -1379,8 +1418,6 @@ var app = (function () {
     }
 
     /* src/Form.svelte generated by Svelte v3.59.2 */
-
-    const { console: console_1 } = globals;
     const file$1 = "src/Form.svelte";
 
     function create_fragment$1(ctx) {
@@ -1393,21 +1430,33 @@ var app = (function () {
     	let t3;
     	let input2;
     	let t4;
-    	let br;
+    	let br0;
     	let t5;
-    	let label1;
+    	let input3;
+    	let t6;
+    	let br1;
     	let t7;
+    	let input4;
+    	let t8;
+    	let br2;
+    	let t9;
+    	let input5;
+    	let t10;
+    	let br3;
+    	let t11;
+    	let label1;
+    	let t13;
     	let select;
     	let option0;
     	let option1;
     	let option2;
     	let option3;
-    	let t12;
+    	let t18;
     	let button;
     	let binding_group;
     	let mounted;
     	let dispose;
-    	binding_group = init_binding_group(/*$$binding_groups*/ ctx[8][0]);
+    	binding_group = init_binding_group(/*$$binding_groups*/ ctx[9][0]);
 
     	const block = {
     		c: function create() {
@@ -1421,11 +1470,23 @@ var app = (function () {
     			t3 = space();
     			input2 = element("input");
     			t4 = text("Being Cool");
-    			br = element("br");
+    			br0 = element("br");
     			t5 = space();
+    			input3 = element("input");
+    			t6 = text("Being Hot");
+    			br1 = element("br");
+    			t7 = space();
+    			input4 = element("input");
+    			t8 = text("Being Both");
+    			br2 = element("br");
+    			t9 = space();
+    			input5 = element("input");
+    			t10 = text("Bonsai");
+    			br3 = element("br");
+    			t11 = space();
     			label1 = element("label");
     			label1.textContent = "Belt Color";
-    			t7 = space();
+    			t13 = space();
     			select = element("select");
     			option0 = element("option");
     			option0.textContent = "Orange";
@@ -1435,41 +1496,54 @@ var app = (function () {
     			option2.textContent = "Black";
     			option3 = element("option");
     			option3.textContent = "White";
-    			t12 = space();
+    			t18 = space();
     			button = element("button");
     			button.textContent = "Add Ninja";
     			attr_dev(input0, "type", "text");
     			attr_dev(input0, "placeholder", "name");
-    			add_location(input0, file$1, 19, 8, 456);
+    			add_location(input0, file$1, 29, 8, 676);
     			attr_dev(input1, "type", "number");
     			attr_dev(input1, "placeholder", "age");
-    			add_location(input1, file$1, 20, 8, 521);
+    			add_location(input1, file$1, 30, 8, 741);
     			attr_dev(label0, "for", "skills");
-    			add_location(label0, file$1, 21, 8, 586);
+    			add_location(label0, file$1, 31, 8, 806);
     			attr_dev(input2, "type", "checkbox");
     			input2.__value = "cool";
     			input2.value = input2.__value;
-    			add_location(input2, file$1, 22, 8, 629);
-    			add_location(br, file$1, 22, 74, 695);
+    			add_location(input2, file$1, 32, 8, 849);
+    			add_location(br0, file$1, 32, 74, 915);
+    			attr_dev(input3, "type", "checkbox");
+    			input3.__value = "hot";
+    			input3.value = input3.__value;
+    			add_location(input3, file$1, 33, 8, 928);
+    			add_location(br1, file$1, 33, 72, 992);
+    			attr_dev(input4, "type", "checkbox");
+    			input4.__value = "both";
+    			input4.value = input4.__value;
+    			add_location(input4, file$1, 34, 8, 1005);
+    			add_location(br2, file$1, 34, 74, 1071);
+    			attr_dev(input5, "type", "checkbox");
+    			add_location(input5, file$1, 35, 8, 1084);
+    			add_location(br3, file$1, 35, 59, 1135);
     			attr_dev(label1, "for", "belts");
-    			add_location(label1, file$1, 23, 8, 708);
+    			add_location(label1, file$1, 36, 8, 1148);
     			option0.__value = "orange";
     			option0.value = option0.__value;
-    			add_location(option0, file$1, 25, 12, 798);
+    			add_location(option0, file$1, 38, 12, 1238);
     			option1.__value = "brown";
     			option1.value = option1.__value;
-    			add_location(option1, file$1, 26, 12, 849);
+    			add_location(option1, file$1, 39, 12, 1289);
     			option2.__value = "black";
     			option2.value = option2.__value;
-    			add_location(option2, file$1, 27, 12, 898);
+    			add_location(option2, file$1, 40, 12, 1338);
     			option3.__value = "white";
     			option3.value = option3.__value;
-    			add_location(option3, file$1, 28, 12, 947);
-    			if (/*beltColor*/ ctx[1] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[9].call(select));
-    			add_location(select, file$1, 24, 8, 754);
-    			add_location(button, file$1, 30, 8, 1010);
-    			add_location(form, file$1, 18, 4, 401);
-    			binding_group.p(input2);
+    			add_location(option3, file$1, 41, 12, 1387);
+    			if (/*beltColor*/ ctx[1] === void 0) add_render_callback(() => /*select_change_handler*/ ctx[13].call(select));
+    			add_location(select, file$1, 37, 8, 1194);
+    			add_location(button, file$1, 43, 8, 1450);
+    			add_location(form, file$1, 28, 4, 621);
+    			binding_group.p(input2, input3, input4);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1487,26 +1561,44 @@ var app = (function () {
     			append_dev(form, input2);
     			input2.checked = ~(/*skills*/ ctx[3] || []).indexOf(input2.__value);
     			append_dev(form, t4);
-    			append_dev(form, br);
+    			append_dev(form, br0);
     			append_dev(form, t5);
-    			append_dev(form, label1);
+    			append_dev(form, input3);
+    			input3.checked = ~(/*skills*/ ctx[3] || []).indexOf(input3.__value);
+    			append_dev(form, t6);
+    			append_dev(form, br1);
     			append_dev(form, t7);
+    			append_dev(form, input4);
+    			input4.checked = ~(/*skills*/ ctx[3] || []).indexOf(input4.__value);
+    			append_dev(form, t8);
+    			append_dev(form, br2);
+    			append_dev(form, t9);
+    			append_dev(form, input5);
+    			input5.checked = /*bonsai*/ ctx[4];
+    			append_dev(form, t10);
+    			append_dev(form, br3);
+    			append_dev(form, t11);
+    			append_dev(form, label1);
+    			append_dev(form, t13);
     			append_dev(form, select);
     			append_dev(select, option0);
     			append_dev(select, option1);
     			append_dev(select, option2);
     			append_dev(select, option3);
     			select_option(select, /*beltColor*/ ctx[1], true);
-    			append_dev(form, t12);
+    			append_dev(form, t18);
     			append_dev(form, button);
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[5]),
-    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[6]),
-    					listen_dev(input2, "change", /*input2_change_handler*/ ctx[7]),
-    					listen_dev(select, "change", /*select_change_handler*/ ctx[9]),
-    					listen_dev(form, "submit", prevent_default(/*handleSubmit*/ ctx[4]), false, true, false, false)
+    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[6]),
+    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[7]),
+    					listen_dev(input2, "change", /*input2_change_handler*/ ctx[8]),
+    					listen_dev(input3, "change", /*input3_change_handler*/ ctx[10]),
+    					listen_dev(input4, "change", /*input4_change_handler*/ ctx[11]),
+    					listen_dev(input5, "change", /*input5_change_handler*/ ctx[12]),
+    					listen_dev(select, "change", /*select_change_handler*/ ctx[13]),
+    					listen_dev(form, "submit", prevent_default(/*handleSubmit*/ ctx[5]), false, true, false, false)
     				];
 
     				mounted = true;
@@ -1523,6 +1615,18 @@ var app = (function () {
 
     			if (dirty & /*skills*/ 8) {
     				input2.checked = ~(/*skills*/ ctx[3] || []).indexOf(input2.__value);
+    			}
+
+    			if (dirty & /*skills*/ 8) {
+    				input3.checked = ~(/*skills*/ ctx[3] || []).indexOf(input3.__value);
+    			}
+
+    			if (dirty & /*skills*/ 8) {
+    				input4.checked = ~(/*skills*/ ctx[3] || []).indexOf(input4.__value);
+    			}
+
+    			if (dirty & /*bonsai*/ 16) {
+    				input5.checked = /*bonsai*/ ctx[4];
     			}
 
     			if (dirty & /*beltColor*/ 2) {
@@ -1557,15 +1661,25 @@ var app = (function () {
     	let beltColor;
     	let age;
     	let skills = [];
+    	let bonsai = false;
+    	const dispatch = createEventDispatcher();
 
     	const handleSubmit = () => {
-    		console.log(name, beltColor, age);
+    		let person = {
+    			name,
+    			beltColor,
+    			age,
+    			skills,
+    			id: Math.random()
+    		};
+
+    		dispatch("addPerson", person);
     	};
 
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1.warn(`<Form> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Form> was created with unknown prop '${key}'`);
     	});
 
     	const $$binding_groups = [[]];
@@ -1585,16 +1699,34 @@ var app = (function () {
     		$$invalidate(3, skills);
     	}
 
+    	function input3_change_handler() {
+    		skills = get_binding_group_value($$binding_groups[0], this.__value, this.checked);
+    		$$invalidate(3, skills);
+    	}
+
+    	function input4_change_handler() {
+    		skills = get_binding_group_value($$binding_groups[0], this.__value, this.checked);
+    		$$invalidate(3, skills);
+    	}
+
+    	function input5_change_handler() {
+    		bonsai = this.checked;
+    		$$invalidate(4, bonsai);
+    	}
+
     	function select_change_handler() {
     		beltColor = select_value(this);
     		$$invalidate(1, beltColor);
     	}
 
     	$$self.$capture_state = () => ({
+    		createEventDispatcher,
     		name,
     		beltColor,
     		age,
     		skills,
+    		bonsai,
+    		dispatch,
     		handleSubmit
     	});
 
@@ -1603,6 +1735,7 @@ var app = (function () {
     		if ('beltColor' in $$props) $$invalidate(1, beltColor = $$props.beltColor);
     		if ('age' in $$props) $$invalidate(2, age = $$props.age);
     		if ('skills' in $$props) $$invalidate(3, skills = $$props.skills);
+    		if ('bonsai' in $$props) $$invalidate(4, bonsai = $$props.bonsai);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1614,11 +1747,15 @@ var app = (function () {
     		beltColor,
     		age,
     		skills,
+    		bonsai,
     		handleSubmit,
     		input0_input_handler,
     		input1_input_handler,
     		input2_change_handler,
     		$$binding_groups,
+    		input3_change_handler,
+    		input4_change_handler,
+    		input5_change_handler,
     		select_change_handler
     	];
     }
@@ -1640,11 +1777,12 @@ var app = (function () {
     /* src/App.svelte generated by Svelte v3.59.2 */
     const file = "src/App.svelte";
 
-    // (31:0) <Model {showModel} on:click={togglePromo}>
+    // (37:0) <Model {showModel} on:click={togglePromo}>
     function create_default_slot(ctx) {
     	let form;
     	let current;
     	form = new Form({ $$inline: true });
+    	form.$on("addPerson", /*addPerson*/ ctx[8]);
 
     	const block = {
     		c: function create() {
@@ -1654,6 +1792,7 @@ var app = (function () {
     			mount_component(form, target, anchor);
     			current = true;
     		},
+    		p: noop,
     		i: function intro(local) {
     			if (current) return;
     			transition_in(form.$$.fragment, local);
@@ -1672,7 +1811,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(31:0) <Model {showModel} on:click={togglePromo}>",
+    		source: "(37:0) <Model {showModel} on:click={togglePromo}>",
     		ctx
     	});
 
@@ -1722,8 +1861,12 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	model.$on("click", /*togglePromo*/ ctx[5]);
-    	globe = new Globe({ $$inline: true });
+    	model.$on("click", /*togglePromo*/ ctx[6]);
+
+    	globe = new Globe({
+    			props: { people: /*people*/ ctx[5] },
+    			$$inline: true
+    		});
 
     	const block = {
     		c: function create() {
@@ -1762,29 +1905,31 @@ var app = (function () {
     			create_component(globe.$$.fragment);
     			set_style(h1, "background-color", /*color*/ ctx[3]);
     			attr_dev(h1, "class", "svelte-1qxaw98");
-    			add_location(h1, file, 46, 1, 950);
-    			add_location(p, file, 47, 1, 1011);
-    			add_location(button0, file, 48, 1, 1046);
+    			add_location(h1, file, 52, 1, 1113);
+    			add_location(p, file, 53, 1, 1174);
+    			add_location(button0, file, 54, 1, 1209);
     			attr_dev(input0, "title", "color");
     			attr_dev(input0, "type", "text");
-    			add_location(input0, file, 50, 1, 1156);
+    			add_location(input0, file, 56, 1, 1319);
     			attr_dev(label0, "for", "fn");
-    			add_location(label0, file, 51, 1, 1210);
+    			add_location(label0, file, 57, 1, 1373);
     			attr_dev(input1, "id", "fn");
     			attr_dev(input1, "title", "First Name");
     			attr_dev(input1, "type", "text");
-    			add_location(input1, file, 52, 1, 1246);
+    			attr_dev(input1, "placeholder", "first name");
+    			add_location(input1, file, 58, 1, 1409);
     			attr_dev(label1, "for", "ln");
-    			add_location(label1, file, 53, 1, 1316);
+    			add_location(label1, file, 59, 1, 1504);
     			attr_dev(input2, "id", "ln");
     			attr_dev(input2, "title", "Last Name");
     			attr_dev(input2, "type", "text");
-    			add_location(input2, file, 54, 1, 1351);
-    			add_location(button1, file, 56, 2, 1444);
+    			attr_dev(input2, "placeholder", "last name");
+    			add_location(input2, file, 60, 1, 1539);
+    			add_location(button1, file, 62, 2, 1656);
     			attr_dev(div, "class", "model_btn");
-    			add_location(div, file, 55, 1, 1418);
+    			add_location(div, file, 61, 1, 1630);
     			attr_dev(main, "class", "svelte-1qxaw98");
-    			add_location(main, file, 45, 0, 942);
+    			add_location(main, file, 51, 0, 1105);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1826,11 +1971,11 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(button0, "click", /*changeColorBlue*/ ctx[6], false, false, false, false),
-    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[7]),
-    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[8]),
-    					listen_dev(input2, "input", /*input2_input_handler*/ ctx[9]),
-    					listen_dev(button1, "click", /*togglePromo*/ ctx[5], { once: true }, false, false, false)
+    					listen_dev(button0, "click", /*changeColorBlue*/ ctx[7], false, false, false, false),
+    					listen_dev(input0, "input", /*input0_input_handler*/ ctx[9]),
+    					listen_dev(input1, "input", /*input1_input_handler*/ ctx[10]),
+    					listen_dev(input2, "input", /*input2_input_handler*/ ctx[11]),
+    					listen_dev(button1, "click", /*togglePromo*/ ctx[6], false, false, false, false)
     				];
 
     				mounted = true;
@@ -1840,7 +1985,7 @@ var app = (function () {
     			const model_changes = {};
     			if (dirty & /*showModel*/ 16) model_changes.showModel = /*showModel*/ ctx[4];
 
-    			if (dirty & /*$$scope*/ 2048) {
+    			if (dirty & /*$$scope*/ 8192) {
     				model_changes.$$scope = { dirty, ctx };
     			}
 
@@ -1864,6 +2009,10 @@ var app = (function () {
     			if (dirty & /*lastName*/ 2 && input2.value !== /*lastName*/ ctx[1]) {
     				set_input_value(input2, /*lastName*/ ctx[1]);
     			}
+
+    			const globe_changes = {};
+    			if (dirty & /*people*/ 32) globe_changes.people = /*people*/ ctx[5];
+    			globe.$set(globe_changes);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -1906,6 +2055,7 @@ var app = (function () {
     	let fullName = '';
     	let color = '';
     	let showModel = false;
+    	let people = [];
 
     	//let showForm = false;
     	//event forwarding
@@ -1921,6 +2071,15 @@ var app = (function () {
 
     	const changeColor = e => {
     		$$invalidate(3, color = e.target.value);
+    	};
+
+    	// $: {
+    	// 	console.log(color);
+    	// };
+    	const addPerson = e => {
+    		const person = e.detail;
+    		$$invalidate(5, people = [person, ...people]);
+    		$$invalidate(4, showModel = !showModel);
     	};
 
     	const writable_props = [];
@@ -1953,9 +2112,11 @@ var app = (function () {
     		fullName,
     		color,
     		showModel,
+    		people,
     		togglePromo,
     		changeColorBlue,
-    		changeColor
+    		changeColor,
+    		addPerson
     	});
 
     	$$self.$inject_state = $$props => {
@@ -1964,6 +2125,7 @@ var app = (function () {
     		if ('fullName' in $$props) $$invalidate(2, fullName = $$props.fullName);
     		if ('color' in $$props) $$invalidate(3, color = $$props.color);
     		if ('showModel' in $$props) $$invalidate(4, showModel = $$props.showModel);
+    		if ('people' in $$props) $$invalidate(5, people = $$props.people);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1983,8 +2145,10 @@ var app = (function () {
     		fullName,
     		color,
     		showModel,
+    		people,
     		togglePromo,
     		changeColorBlue,
+    		addPerson,
     		input0_input_handler,
     		input1_input_handler,
     		input2_input_handler

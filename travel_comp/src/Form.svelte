@@ -1,11 +1,25 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte"
     let name;
     let beltColor;
     let age;
     let skills = [];
+    let bonsai = false;
+
+    const dispatch = createEventDispatcher();
+
     const handleSubmit = () => {
-        console.log(name, beltColor, age);
+        let person = {
+            name,
+            beltColor,
+            age,
+            skills,
+            id: Math.random()
+        }
+        dispatch("addPerson", person);
     }
+    
+    
 </script>
 
 <!--{#if showForm}
@@ -22,6 +36,9 @@
         <input type="number" placeholder="age" bind:value={age}>
         <label for="skills">Skills</label>
         <input type="checkbox" bind:group={skills} value="cool">Being Cool<br>
+        <input type="checkbox" bind:group={skills} value="hot">Being Hot<br>
+        <input type="checkbox" bind:group={skills} value="both">Being Both<br>
+        <input type="checkbox" bind:checked={bonsai}>Bonsai<br>
         <label for="belts">Belt Color</label>
         <select bind:value={beltColor}>
             <option value="orange">Orange</option>
