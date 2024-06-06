@@ -4,7 +4,7 @@
 </script>
 
 <footer>
-    <div class="left">
+    <div class="copyright">
         <address>
             <ul>
                 <li>Name: <a href="https://en.wikipedia.org/wiki/Doraemon">{name}</a></li>
@@ -19,5 +19,15 @@
         background-color: beige;
         color: dimgray;
         height: 150px;
+        padding: 40px;
+        text-align: center;
+    }
+
+    .copyright{
+        color: #aaa;
+        font-size: 14px;
+        display: inline-block;
+        padding: 20px;
+        border-top: 1px solid #ddd;
     }
 </style>
