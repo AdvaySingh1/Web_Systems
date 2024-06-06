@@ -3,9 +3,14 @@
 	import Header from "./container/Header.svelte";
 	import Footer from "./container/Footer.svelte";
 	import Tab from "./shared/Tab.svelte";
-	import CreatePollsLog from './container/CreatePollsLog.svelte'; 
-	//import ViewPolls from "src/container/ViewPolls.svelte";
-	let tabs: Array<string> = ["Create Polls", "View Polls"];
+	import PollsView from './container/PollsView.svelte';
+	import PollsCreate from './container/PollsCreate.svelte';
+
+	let tabs: Array<string> = ['Create Polls', 'View Polls'];
+	
+	// data
+	let polls = [];
+
 
 	let currTab: string = "Create Polls";
 
@@ -14,21 +19,21 @@
 	}
 
 	const handleAdd = (e) => {
-		console.log(e.detail);
+		currTab = 'View Polls';
+		polls = [e.detail, ...polls];
 	}
 
 </script>
 
 
 <Header/>
-<CreatePollsLog on:add={handleAdd}/> 
 
 <Tab {tabs} {currTab} on:toggleTab={toggleTab}/>
 <main>
 	{#if currTab === "Create Polls"}
-		something
+		<PollsCreate on:add={handleAdd}/>
 	{:else}
-		<!---<ViewPolls/>-->Something
+		<PollsView {polls}/>
 	{/if}
 </main>
 
