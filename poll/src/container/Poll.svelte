@@ -3,10 +3,17 @@
     import Card from '../shared/Card.svelte';
     export let poll: object = {};
     $: totalVotes = poll.votesA + poll.votesB;
+    $: percents = [Math.floor(100 * poll.votesA / totalVotes), Math.floor(100 * poll.votesB/ totalVotes)];
+    let voted: bool = false;
     const dispatch = createEventDispatcher();
 
+    let voteA = false;
+
     const vote = function(option: string, id: number){
-        dispatch("vote", {option, id});
+        if (!voted){
+            dispatch("vote", {option, id});
+        }
+        voted = true;
     }
 </script>
 
@@ -16,11 +23,13 @@
         <p>Total Votes ({totalVotes})</p>
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div class="answer" on:click|once={()=> {vote('a', poll.id)}}>
+        <div class="answer" on:click|once={() => {vote('a', poll.id)}}>
+            <div class="percent percent-a" style="width:{percents[0]}%"></div>
             <span>{poll.answer1} ({poll.votesA})</span>
         </div>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="answer" on:click|once={()=> {vote('b', poll.id)}}>
+            <div class="percent percent-b" style="width:{percents[1]}%"></div>
             <span>{poll.answer2} ({poll.votesB})</span>
         </div>
     </Card>
@@ -49,5 +58,19 @@
   span{
     display: inline-block;
     padding: 10px 20px;
+  }
+  .percent {
+    height: 100%;
+    position: absolute;
+    box-sizing: border-box;
+  }
+
+  .percent-a {
+    background: rgba(217,27,66,0.2);
+    border-left: 4px solid #d91b42;
+  }
+  .percent-b {
+    background: rgba(69,196,150,0.2);
+    border-left: 4px solid #45c496;
   }
 </style>
