@@ -1,6 +1,26 @@
 <script lang="ts">
+    import { onMount, onDestroy } from 'svelte';
     import PollDetails from './Poll.svelte';
-    export let polls: array<object> = [];
+    //export let polls: array<object> = [];
+    import PollStore from '../store/PollStore.ts';
+    let polls: array<object> = [];
+
+    // onMount(() => {
+    //     const unsub = PollStore.subscribe((data) => {
+    //         polls = data;
+    //     });
+    // });
+    
+    // const unsub = PollStore.subscribe((data) => {
+    //     polls = data;
+    // });
+
+    // onDestroy(() =>{
+    //     console.log('destroyed');
+    //     unsub();
+    // })
+
+    
 
     let logger = (val) =>{
         console.log(val);
@@ -8,8 +28,8 @@
   </script>
   
   <div class="poll-list">
-    {#each polls as poll (poll.id)}
-      <PollDetails {poll} on:vote|once/>
+    {#each $PollStore as poll (poll.id)}
+      <PollDetails {poll}/>
 
         <!-- {:else}
         There are no polls as of now. -->

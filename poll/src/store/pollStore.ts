@@ -4,9 +4,11 @@ const PollStore = writable([
         {
           id: 1,
           question: 'Python or JavaScript?',
-          answerA: 'Python',
-          answerB: 'JavaScript',
+          answer1: 'Python',
+          answer2: 'JavaScript',
           votesA: 9,
           votesB: 15,
         },
 ]);
+
+export default PollStore;

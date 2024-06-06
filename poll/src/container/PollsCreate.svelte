@@ -1,4 +1,5 @@
 <script lang='ts'>
+    import PollStore from '../store/PollStore.ts';
     import {createEventDispatcher} from 'svelte';
     import Button from '../shared/Button.svelte';
     let polls = {question: String =  '', answer1: String =  '', answer2: String =  ''};
@@ -37,10 +38,11 @@
 
     const handleAdd = () => {
         if (isValid()){
-            dispatch('add', {...polls, votesA: 0, votesB: 0, id: Math.random()});
-            for (let key in polls){
-                polls[key] = '';
-            }
+            PollStore.update((currentPolls) =>{
+                return([{...polls, votesA: 0, votesB: 0, id: Math.random()}, ...currentPolls]);
+            });
+
+            dispatch('add');
         }
     }
 </script>
