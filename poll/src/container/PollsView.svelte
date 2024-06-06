@@ -1,12 +1,18 @@
-<script>
-    export let polls = {};
+<script lang="ts">
+    import PollDetails from './Poll.svelte';
+    export let polls: array<object> = [];
+
+    let logger = (val) =>{
+        console.log(val);
+    }
   </script>
   
   <div class="poll-list">
     {#each polls as poll (poll.id)}
-      <div>{poll.question}</div>
-        {:else}
-        There are no polls as of now.
+      <PollDetails {poll} on:vote|once/>
+
+        <!-- {:else}
+        There are no polls as of now. -->
     {/each}
   </div>
   

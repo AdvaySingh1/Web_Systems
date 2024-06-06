@@ -9,7 +9,16 @@
 	let tabs: Array<string> = ['Create Polls', 'View Polls'];
 	
 	// data
-	let polls = [];
+	let polls = [
+    {
+      id: 1,
+      question: 'Python or JavaScript?',
+      answerA: 'Python',
+      answerB: 'JavaScript',
+      votesA: 9,
+      votesB: 15,
+    },
+  ];
 
 
 	let currTab: string = "Create Polls";
@@ -23,19 +32,39 @@
 		polls = [e.detail, ...polls];
 	}
 
+	const handleVote = (e) => {
+		// let id = e.detail.id;
+		// let option = e.detail.option;
+		const {option, id} = e.detail;
+		let copiedPolls = [...polls];
+		let upvotedPoll = copiedPolls.find(poll => poll.id == id);
+		if(option === 'a'){
+			upvotedPoll.votesA++;
+		}
+		if(option === 'b'){
+			upvotedPoll.votesB++;
+		}
+		polls = copiedPolls;
+		
+	}
+	// let logger = (val) =>{
+    //     console.log(val);
+    // }
+
+
 </script>
 
 
 <Header/>
-
 <Tab {tabs} {currTab} on:toggleTab={toggleTab}/>
 <main>
 	{#if currTab === "Create Polls"}
 		<PollsCreate on:add={handleAdd}/>
 	{:else}
-		<PollsView {polls}/>
+		<PollsView {polls} on:vote={handleVote}/>
 	{/if}
 </main>
+
 
 <Footer/>
 
