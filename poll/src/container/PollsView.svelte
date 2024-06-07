@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { fade, slide, scale} from 'svelte/transition';
+    import {flip} from 'svelte/animate';
     import { onMount, onDestroy } from 'svelte';
     import PollDetails from './Poll.svelte';
     //export let polls: array<object> = [];
@@ -20,16 +22,17 @@
     //     unsub();
     // })
 
-    
 
     let logger = (val) =>{
         console.log(val);
     }
   </script>
   
-  <div class="poll-list">
+  <div class="poll-list" slide>
     {#each $PollStore as poll (poll.id)}
-      <PollDetails {poll}/>
+    <div in:fade={{ delay: 250, duration: 300 }} out:scale|local animate:flip={{duration: 500}}>
+        <PollDetails {poll}/>
+    </div>
 
         <!-- {:else}
         There are no polls as of now. -->

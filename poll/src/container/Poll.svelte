@@ -1,12 +1,17 @@
 <script lang="ts">
     import PollStore from '../store/PollStore.ts';
     import Button from '../shared/Button.svelte';
+    import { tweened } from 'svelte/motion';
     //import {createEventDispatcher} from 'svelte';
     import Card from '../shared/Card.svelte';
     export let poll: object = {};
     $: totalVotes = poll.votesA + poll.votesB;
-    $: percents = [Math.floor(100 * poll.votesA / totalVotes), Math.floor(100 * poll.votesB/ totalVotes)];
+    $: percents = [Math.floor(100 * poll.votesA / totalVotes) || 0, Math.floor(100 * poll.votesB/ totalVotes) || 0];
     let voted: bool = false;
+    const tweenedA = tweened(0);
+    const tweenedB = tweened(0);
+    $: tweenedA.set(percents[0]);
+    $: tweenedB.set(percents[1]);
     //const dispatch = createEventDispatcher();
 
     let handleDelete = (id: number) => {
@@ -46,12 +51,12 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="answer" on:click|once={() => {vote('a', poll.id)}}>
-            <div class="percent percent-a" style="width:{percents[0]}%"></div>
+            <div class="percent percent-a" style="width:{$tweenedA}%"></div>
             <span>{poll.answer1} ({poll.votesA})</span>
         </div>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="answer" on:click|once={()=> {vote('b', poll.id)}}>
-            <div class="percent percent-b" style="width:{percents[1]}%"></div>
+            <div class="percent percent-b" style="width:{$tweenedB}%"></div>
             <span>{poll.answer2} ({poll.votesB})</span>
         </div>
         <div class="delete">
