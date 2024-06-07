@@ -1,5 +1,6 @@
 <script lang="ts">
     import PollStore from '../store/PollStore.ts';
+    import Button from '../shared/Button.svelte';
     //import {createEventDispatcher} from 'svelte';
     import Card from '../shared/Card.svelte';
     export let poll: object = {};
@@ -7,6 +8,13 @@
     $: percents = [Math.floor(100 * poll.votesA / totalVotes), Math.floor(100 * poll.votesB/ totalVotes)];
     let voted: bool = false;
     //const dispatch = createEventDispatcher();
+
+    let handleDelete = (id: number) => {
+      // callback function is updating
+      PollStore.update((polls) => {
+        return (polls.filter((polls) => polls.id != id));
+      });
+    }
 
     let voteA = false;
 
@@ -45,6 +53,9 @@
         <div class="answer" on:click|once={()=> {vote('b', poll.id)}}>
             <div class="percent percent-b" style="width:{percents[1]}%"></div>
             <span>{poll.answer2} ({poll.votesB})</span>
+        </div>
+        <div class="delete">
+          <Button flat={true} on:click={() => handleDelete(poll.id)}>Delete</Button>
         </div>
     </Card>
 </div>
@@ -86,5 +97,9 @@
   .percent-b {
     background: rgba(69,196,150,0.2);
     border-left: 4px solid #45c496;
+  }
+  .delete {
+    text-align: center;
+    margin-top: 30px;
   }
 </style>
