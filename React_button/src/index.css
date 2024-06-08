@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-r from-red-300 bg-blue-400;
+  }
+
+  /* animating title */
+  @keyframes cosmicShine {
+    0% {
+      background-size: 200% 200%;
+      background-position: -50% 0%;
+    }
+    50% {
+      background-position: 150% 0%;
+    }
+    100% {
+      background-position: -50% 0%;
+    }
+  }
+
+  .twinkling-stars::before {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("stars.png") repeat;
+    opacity: 0.3;
+    z-index: -1;
+  }
+}
