@@ -1,4 +1,6 @@
 <script lang='ts'>
+    import {fade} from 'svelte/transition';
+    import PollStore from '../store/PollStore.ts';
     import {createEventDispatcher} from 'svelte';
     import Button from '../shared/Button.svelte';
     let polls = {question: String =  '', answer1: String =  '', answer2: String =  ''};
@@ -37,16 +39,17 @@
 
     const handleAdd = () => {
         if (isValid()){
-            dispatch('add', {...polls, votesA: 0, votesB: 0, id: Math.random()});
-            for (let key in polls){
-                polls[key] = '';
-            }
+            PollStore.update((currentPolls) =>{
+                return([{...polls, votesA: 0, votesB: 0, id: Math.random()}, ...currentPolls]);
+            });
+
+            dispatch('add');
         }
     }
 </script>
 
 
-<form on:submit|preventDefault={handleAdd}>
+<form in:fade={{ delay: 250, duration: 300 }} on:submit|preventDefault={handleAdd}>
     <div>
         <label for="question">Question</label>
         <input type="text" id="question" bind:value={polls.question}>
@@ -62,7 +65,7 @@
         <input type="text" id="a2" bind:value={polls.answer2}>
         <div class="error">{errors.answer2}</div>
     </div>
-    <Button>Add</Button>
+    <Button type={'secondary'}>Add</Button>
 </form>
 
 <style>

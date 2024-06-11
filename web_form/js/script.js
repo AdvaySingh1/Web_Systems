@@ -124,6 +124,31 @@ delUl.addEventListener('mouseout', function(e){
 
 
 
+    //In TS
+ // Assuming we have an element with class 'ed' which contains a 'ul' element
+// const delUl = document.querySelector('.ed > ul');
+
+// // Check if the element exists and is indeed a 'ul' element to ensure type safety
+// if (delUl instanceof HTMLUListElement) {
+//     delUl.addEventListener('mouseover', function (e: MouseEvent) {
+//         // The 'target' property on the event is of type 'EventTarget' which doesn't have
+//         // a 'tagName' property or 'style' property by default. 
+
+//         // Use type assertion to tell TypeScript the target is an HTMLButtonElement based on the check
+//         const target = e.target as HTMLElement;
+//         if (target && target.tagName === 'BUTTON') {
+//             target.style.backgroundColor = 'pink';
+//         }
+//     }, true);
+
+//     delUl.addEventListener('mouseout', function (e: MouseEvent) {
+//         // Similar to above, assert 'e.target' is an HTMLElement
+//         const target = e.target as HTMLElement;
+//         if (target && target.tagName === 'BUTTON') {
+//             target.style.backgroundColor = '';
+//         }
+//     }, true);
+// }
 
 
 
