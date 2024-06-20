@@ -2,8 +2,43 @@ import PocketBase from "pocketbase";
 import Card from "../lib/Card";
 
 async function fetchCards() {
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8090/api/collections/Cards/records?page=1&perPage=30",
+      { cache: "no-store" }
+    );
+    const data = await response.json();
+    const cards = data.items.map(
+      (record: {
+        id: string;
+        Name: string;
+        Move: string;
+        Damage: number;
+        Img_Link: string;
+      }) => {
+        return {
+          id: record.id,
+          name: record.Name,
+          move: record.Move,
+          damage: record.Damage,
+          image: record.Img_Link,
+        };
+      }
+    );
+    return cards;
+  } catch (e) {
+    console.log("error fetching data");
+  }
+
   const pb = new PocketBase("http://127.0.0.1:8090");
+  pb.autoCancellation(false);
+
+  const pageResult = await pb.logs.getList(1, 20, {
+    filter: "data.status >= 100",
+  });
+  console.log(pageResult);
   // Use try-catch to handle any errors that might occur during fetch
+  pb.collection("Cards").subscribe;
   const records = await pb.collection("Cards").getFullList({});
 
   // try {

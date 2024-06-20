@@ -184,7 +184,7 @@ const fetchAPIdata = async (link) => {
 };
 const fetch = require("node-fetch");
 
-fetch("https://api.example.com/data")
+fetch(`https://api.example.com/data/${idNumber}`)
   .then((response) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`); // allows to insert js into strings
@@ -197,6 +197,13 @@ fetch("https://api.example.com/data")
   .catch((error) => {
     console.error("There was an error!", error);
   });
+
+  // only async on click functionality
+  // action={async () => {
+  //         "use server";
+  //         await logout();
+  //         redirect("/");
+  //       }}
 
 // importing and exporting
 import some from "some"; // same as const some = require('some');
