@@ -17,21 +17,20 @@ import { redirect } from "@sveltejs/kit";
   event.locals.user = authenticateUser(event);
 
   // redirect as needed
-  console.log(event.url.pathname);
+  //   console.log(event.url.pathname);
 
+  // TODO try this in the hooks.ts this will not redirect instantly and rather wait for server refresh
   if (event.url.pathname.startsWith("/protected")) {
     if (!event.locals.user) {
       throw redirect(303, "/");
     }
     if (event.url.pathname.startsWith("/protected/admin")) {
-      console.log("jere");
       if (event.locals.user.role != "ADMIN") {
-        console.log("cant access");
+        // console.log("cant access");
         throw redirect(303, "/protected");
       }
     }
   }
-
-  console.log(event.locals.user?.role);
+  //   console.log(event.locals.user?.role);
   return response;
 }
